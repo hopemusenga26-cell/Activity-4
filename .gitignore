@@ -1,0 +1,6 @@
+node_modules/
+backend/data/
+*.db
+*.db-shm
+*.db-wal
+# backend/.env is kept in the repo on purpose: the brief lists it and it holds no secrets.
