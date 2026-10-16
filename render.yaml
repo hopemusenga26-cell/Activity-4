@@ -1,0 +1,19 @@
+# Render blueprint: one web service that serves the API and the frontend.
+# The SQLite file is re-created from schema.sql whenever the instance restarts
+# (free instances have no persistent disk), so the 12 sample clinics always come back.
+services:
+  - type: web
+    name: clinic-crud
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: DB_FILE
+        value: ./data/clinic.db
+      - key: CORS_ORIGIN
+        value: "*"
