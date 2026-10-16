@@ -1,0 +1,228 @@
+{
+  "info": {
+    "name": "ICT251 Activity 4 - Clinic API",
+    "description": "CRUD requests for the Health Clinic Info Page API (resource: clinic). Run the folder top to bottom: POST stores the new id, which GET one, PUT and DELETE then reuse.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. GET all clinics",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('Response is JSON', () => pm.response.to.be.json);",
+              "const body = pm.response.json();",
+              "pm.test('Returns a list of clinics', () => {",
+              "  pm.expect(body.success).to.eql(true);",
+              "  pm.expect(body.data).to.be.an('array');",
+              "  pm.expect(body.count).to.eql(body.data.length);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/clinic",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "clinic"]
+        }
+      }
+    },
+    {
+      "name": "2. POST create clinic",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 201 Created', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('Created clinic is returned with an id and timestamps', () => {",
+              "  pm.expect(body.data.id).to.be.a('number');",
+              "  pm.expect(body.data.clinic_name).to.eql('Kabwe North Wellness Clinic');",
+              "  pm.expect(body.data.accepts_walk_ins).to.eql(true);",
+              "  pm.expect(body.data).to.have.property('created_at');",
+              "  pm.expect(body.data).to.have.property('updated_at');",
+              "});",
+              "pm.collectionVariables.set('clinicId', body.data.id);"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"clinic_name\": \"Kabwe North Wellness Clinic\",\n  \"doctor_name\": \"Dr. Mapalo Kasonde\",\n  \"specialty\": \"General Practice\",\n  \"location\": \"Kalonga, Kabwe\",\n  \"phone\": \"+260 970 000 201\",\n  \"email\": \"north.wellness@example.com\",\n  \"opening_hours\": \"Mon-Sat 08:00-18:00\",\n  \"consultation_fee\": 120,\n  \"accepts_walk_ins\": true\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/clinic",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "clinic"]
+        }
+      }
+    },
+    {
+      "name": "3. GET one clinic",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Returns the clinic that was just created', () => {",
+              "  pm.expect(body.data.id).to.eql(Number(pm.collectionVariables.get('clinicId')));",
+              "  pm.expect(body.data.clinic_name).to.eql('Kabwe North Wellness Clinic');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/clinic/{{clinicId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "clinic", "{{clinicId}}"]
+        }
+      }
+    },
+    {
+      "name": "4. PUT update clinic",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Changes are saved', () => {",
+              "  pm.expect(body.data.consultation_fee).to.eql(95.5);",
+              "  pm.expect(body.data.opening_hours).to.eql('Daily 07:00-21:00');",
+              "  pm.expect(body.data.accepts_walk_ins).to.eql(false);",
+              "  pm.expect(body.data.doctor_name).to.eql('Dr. Mapalo Kasonde');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"opening_hours\": \"Daily 07:00-21:00\",\n  \"consultation_fee\": 95.5,\n  \"accepts_walk_ins\": false\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/clinic/{{clinicId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "clinic", "{{clinicId}}"]
+        }
+      }
+    },
+    {
+      "name": "5. DELETE clinic",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Deleted clinic is returned', () => {",
+              "  pm.expect(body.success).to.eql(true);",
+              "  pm.expect(body.data.id).to.eql(Number(pm.collectionVariables.get('clinicId')));",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/clinic/{{clinicId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "clinic", "{{clinicId}}"]
+        }
+      }
+    },
+    {
+      "name": "6. GET deleted clinic returns 404",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 404', () => pm.response.to.have.status(404));",
+              "pm.test('Error is JSON', () => pm.expect(pm.response.json().success).to.eql(false));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/clinic/{{clinicId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "clinic", "{{clinicId}}"]
+        }
+      }
+    },
+    {
+      "name": "7. POST without clinic_name returns 400",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status is 400', () => pm.response.to.have.status(400));",
+              "pm.test('Explains which fields are wrong', () => {",
+              "  const body = pm.response.json();",
+              "  pm.expect(body.details).to.have.property('clinic_name');",
+              "  pm.expect(body.details).to.have.property('email');",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"doctor_name\": \"Dr. Nobody\",\n  \"email\": \"not-an-email\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/clinic",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "clinic"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "clinicId", "value": "1" }
+  ]
+}
