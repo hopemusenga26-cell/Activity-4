@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kabwe Clinic Directory</title>
+  <meta name="description" content="Find, add and update health clinics in Kabwe.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%231f6f5c' d='M11 2h10v9h9v10h-9v9H11v-9H2V11h9z'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f2f5f3;
+      --sheet: #ffffff;
+      --ink: #14213d;
+      --muted: #566661;
+      --rule: #c9d3ce;
+      --scrubs: #1f6f5c;
+      --scrubs-soft: #e2efe9;
+      --alert: #b42318;
+      --alert-soft: #fbe9e7;
+      --focus: #2457c5;
+      --radius-sheet: 6px;
+      --radius-control: 4px;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #101a1f;
+        --sheet: #17242b;
+        --ink: #e6eef0;
+        --muted: #9fb2b0;
+        --rule: #2d3f45;
+        --scrubs: #5cc3a6;
+        --scrubs-soft: #183a33;
+        --alert: #ff8a7a;
+        --alert-soft: #3a1d1b;
+        --focus: #8fb0ff;
+        color-scheme: dark;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Atkinson Hyperlegible", system-ui, sans-serif;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+    button, input, select { font: inherit; color: inherit; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+    .page { max-width: 1320px; margin: 0 auto; padding: 32px 16px 64px; }
+
+    /* Header ---------------------------------------------------------- */
+    .masthead {
+      display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between;
+      gap: 8px 24px; padding-bottom: 20px; margin-bottom: 28px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .masthead h1 {
+      margin: 0; font-size: clamp(2rem, 4.5vw, 3.25rem); line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+    .masthead h1 .cross {
+      display: inline-block; width: 0.62em; height: 0.62em; margin-right: 0.22em;
+      vertical-align: 0.02em; background: var(--scrubs);
+      clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%);
+    }
+    .masthead p { margin: 0; color: var(--muted); max-width: 46ch; }
+
+    .layout { display: grid; gap: 28px; grid-template-columns: minmax(300px, 360px) minmax(0, 1fr); align-items: start; }
+    .register { container-type: inline-size; min-width: 0; }
+
+    /* Referral slip (the form) --------------------------------------- */
+    .slip {
+      position: sticky; top: 16px;
+      background: var(--sheet);
+      border-radius: 0 0 var(--radius-sheet) var(--radius-sheet);
+      box-shadow: 0 1px 0 var(--rule), 0 12px 28px -18px rgba(20, 33, 61, 0.45);
+      padding: 26px 22px 22px;
+    }
+    /* perforated tear-off edge */
+    .slip::before {
+      content: ""; position: absolute; left: 0; right: 0; top: -7px; height: 14px;
+      background: radial-gradient(circle at 7px 7px, var(--paper) 4px, transparent 4.5px) 0 0 / 14px 14px repeat-x,
+                  linear-gradient(var(--sheet), var(--sheet)) 0 7px / 100% 7px no-repeat;
+    }
+    .slip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+    .slip h2 { margin: 0; font-size: 1.35rem; }
+    .slip .slip-no { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .slip.is-editing { box-shadow: 0 0 0 2px var(--scrubs), 0 12px 28px -18px rgba(20, 33, 61, 0.45); }
+
+    .field { display: grid; gap: 2px; padding: 9px 0 7px; border-bottom: 1px solid var(--rule); }
+    .field label { font-size: 0.85rem; color: var(--muted); }
+    .field input, .field select {
+      width: 100%; border: 0; background: transparent; padding: 2px 0; font-size: 1.05rem; min-height: 32px;
+    }
+    .field input:focus-visible, .field select:focus-visible { outline: none; }
+    .field:focus-within { border-bottom-color: var(--scrubs); box-shadow: 0 1px 0 var(--scrubs); }
+    .field .err { color: var(--alert); font-size: 0.85rem; min-height: 0; }
+    .field .err:empty { display: none; }
+    .field.has-error { border-bottom-color: var(--alert); }
+    .field-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .field-check { display: flex; align-items: center; gap: 10px; padding: 12px 0 10px; border-bottom: 1px solid var(--rule); }
+    .field-check input { width: 20px; height: 20px; accent-color: var(--scrubs); margin: 0; }
+    .req { color: var(--alert); }
+
+    .slip-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .btn {
+      appearance: none; border: 1.5px solid var(--ink); background: transparent; color: var(--ink);
+      border-radius: var(--radius-control); padding: 9px 16px; min-height: 44px; cursor: pointer;
+      font-weight: 700;
+    }
+    .btn-primary { background: var(--scrubs); border-color: var(--scrubs); color: #fff; }
+    @media (prefers-color-scheme: dark) { .btn-primary { color: #0c1a16; } }
+    .btn-primary:hover { filter: brightness(1.08); }
+    .btn:disabled { opacity: 0.6; cursor: progress; }
+    .btn[hidden] { display: none; }
+
+    /* Register (the list) --------------------------------------------- */
+    .register-bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .register-bar h2 { margin: 0; font-size: 1.35rem; }
+    .search { display: flex; align-items: center; gap: 8px; border-bottom: 1.5px solid var(--ink); min-width: min(100%, 300px); }
+    .search input { border: 0; background: transparent; padding: 8px 0; flex: 1; min-width: 0; }
+    .search input:focus-visible { outline: none; }
+    .search:focus-within { border-bottom-color: var(--scrubs); }
+    .search svg, .search kbd { flex: none; color: var(--muted); }
+
+    .status { min-height: 1.5em; margin: 0 0 10px; font-size: 0.95rem; }
+    .status.ok { color: var(--scrubs); }
+    .status.bad { color: var(--alert); }
+
+    table { width: 100%; border-collapse: collapse; background: var(--sheet); border-radius: var(--radius-sheet); overflow: hidden; }
+    caption { text-align: left; color: var(--muted); font-size: 0.9rem; padding: 0 0 8px; caption-side: top; }
+    th, td { text-align: left; padding: 12px; vertical-align: top; border-bottom: 1px solid var(--rule); }
+    thead th { font-size: 0.85rem; color: var(--muted); font-weight: 700; background: var(--sheet); border-bottom: 2px solid var(--ink); }
+    tbody tr:last-child td { border-bottom: 0; }
+    tbody tr.is-editing { background: var(--scrubs-soft); }
+    tbody tr.flash { animation: flash 1.6s ease-out; }
+    @keyframes flash { from { background: var(--scrubs-soft); } to { background: transparent; } }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .c-name { font-weight: 700; }
+    .c-sub { display: block; color: var(--muted); font-size: 0.9rem; overflow-wrap: anywhere; }
+    .c-sub a[href^="tel:"] { white-space: nowrap; }
+    #register { overflow-x: auto; }
+    .c-sub a { color: inherit; }
+    .walkin { display: inline-block; font-size: 0.85rem; padding: 1px 8px; border-radius: 999px; border: 1px solid var(--rule); white-space: nowrap; }
+    .walkin.yes { border-color: var(--scrubs); color: var(--scrubs); }
+    .row-actions { display: flex; gap: 6px; justify-content: flex-end; flex-wrap: wrap; }
+    .link-btn {
+      appearance: none; background: none; border: 0; padding: 6px 8px; min-height: 36px; cursor: pointer;
+      font-weight: 700; color: var(--ink); text-decoration: underline; text-underline-offset: 3px; border-radius: var(--radius-control);
+    }
+    .link-btn.danger { color: var(--alert); }
+    .row-actions .link-btn { white-space: nowrap; }
+    tbody tr.is-confirming, tbody tr.confirm-row { background: var(--alert-soft); }
+    tbody tr.is-confirming td { border-bottom: 0; }
+    .confirm-box { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; padding: 10px 12px; border-left: 3px solid var(--alert); }
+    .confirm-q { color: var(--ink); }
+    .confirm-q strong { color: var(--alert); }
+    .confirm-btns { display: flex; gap: 8px; }
+    .link-btn.confirm { background: var(--alert); color: #fff; text-decoration: none; padding: 6px 12px; }
+    @media (prefers-color-scheme: dark) { .link-btn.confirm { color: #2a0e0b; } }
+
+    /* Quick filters + sort */
+    .toolbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .chip {
+      appearance: none; display: inline-flex; align-items: center; gap: 8px; min-height: 40px; padding: 6px 14px;
+      border: 1.5px solid var(--rule); border-radius: 999px; background: var(--sheet); color: var(--ink); cursor: pointer;
+    }
+    .chip:hover { border-color: var(--scrubs); }
+    .chip[aria-pressed="true"] { background: var(--scrubs); border-color: var(--scrubs); color: #fff; font-weight: 700; }
+    @media (prefers-color-scheme: dark) { .chip[aria-pressed="true"] { color: #0c1a16; } }
+    .chip .n { font-variant-numeric: tabular-nums; font-size: 0.85rem; opacity: 0.8; }
+    .chip .tick { display: none; }
+    .chip[aria-pressed="true"] .tick { display: inline; }
+    .sort { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 0.95rem; }
+    .sort select { border: 1.5px solid var(--rule); border-radius: var(--radius-control); background: var(--sheet); padding: 6px 10px; min-height: 40px; color: var(--ink); }
+
+    /* Open-now status */
+    .hours { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 2px; }
+    .open-state { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+    .open-state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+    .open-state.is-open { color: var(--scrubs); }
+    .open-state.is-closed { color: var(--muted); }
+
+    /* Loading skeleton */
+    .skeleton { background: var(--sheet); border-radius: var(--radius-sheet); padding: 6px 14px; }
+    .skeleton div { height: 54px; border-bottom: 1px solid var(--rule); position: relative; overflow: hidden; }
+    .skeleton div::after {
+      content: ""; position: absolute; left: 0; top: 18px; height: 16px; width: 60%; border-radius: 4px; background: var(--rule);
+      animation: pulse 1.2s ease-in-out infinite alternate;
+    }
+    @keyframes pulse { from { opacity: 0.45; } to { opacity: 1; } }
+
+    .empty { padding: 36px 16px; text-align: center; color: var(--muted); background: var(--sheet); border-radius: var(--radius-sheet); }
+    .empty strong { display: block; color: var(--ink); font-size: 1.1rem; margin-bottom: 4px; }
+    .empty .btn { margin-top: 14px; }
+
+    /* Toasts */
+    .toasts { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); display: grid; gap: 8px; z-index: 10; width: min(92vw, 460px); }
+    .toast {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 12px 12px 16px;
+      background: var(--ink); color: var(--paper); border-radius: var(--radius-sheet);
+      box-shadow: 0 10px 30px -12px rgba(20, 33, 61, 0.6); animation: toast-in 0.18s ease-out;
+    }
+    .toast.bad { background: var(--alert); color: #fff; }
+    .toast button { appearance: none; border: 0; background: transparent; color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; padding: 6px 8px; min-height: 36px; cursor: pointer; border-radius: var(--radius-control); }
+    .toast button:focus-visible { outline-color: var(--paper); }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    kbd { font: inherit; font-size: 0.8rem; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--muted); }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+    /* Responsive ------------------------------------------------------ */
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      .slip { position: static; }
+    }
+    @media (max-width: 680px) {
+      .page { padding-top: 24px; }
+    }
+    /* The register switches to stacked rows whenever its own column gets narrow. */
+    @container (max-width: 720px) {
+      thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+      table, caption, tbody, tr, td { display: block; width: 100%; }
+      caption { padding: 10px 14px 0; }
+      tr { padding: 12px 14px; border-bottom: 1px solid var(--rule); }
+      td { border: 0; padding: 2px 0; }
+      td.num { text-align: left; }
+      td[data-label]:not(.cell-name)::before { content: attr(data-label) ": "; color: var(--muted); }
+      .row-actions { justify-content: flex-start; margin-top: 6px; }
+      tr.confirm-row { padding-top: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      tbody tr.flash, .toast, .skeleton div::after { animation: none; }
+    }
+    @media (hover: none) { .search kbd { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <h1><span class="cross" aria-hidden="true"></span>Kabwe clinic directory</h1>
+      <p>Where to get care in town: who's on duty, when they open, what a visit costs and whether you can just walk in.</p>
+    </header>
+
+    <main class="layout">
+      <form id="clinic-form" class="slip" novalidate aria-labelledby="form-title">
+        <div class="slip-head">
+          <h2 id="form-title">Add a clinic</h2>
+          <span class="slip-no" id="form-ref">New entry</span>
+        </div>
+
+        <input type="hidden" id="clinic-id">
+
+        <div class="field">
+          <label for="clinic_name">Clinic name <span class="req" aria-hidden="true">*</span></label>
+          <input id="clinic_name" name="clinic_name" maxlength="150" required autocomplete="organization">
+          <span class="err" id="clinic_name-err"></span>
+        </div>
+        <div class="field">
+          <label for="doctor_name">Doctor in charge</label>
+          <input id="doctor_name" name="doctor_name" maxlength="150" autocomplete="off">
+          <span class="err" id="doctor_name-err"></span>
+        </div>
+        <div class="field">
+          <label for="specialty">Specialty</label>
+          <input id="specialty" name="specialty" maxlength="100" list="specialties" autocomplete="off">
+          <datalist id="specialties">
+            <option value="General Practice"><option value="Family Medicine"><option value="Paediatrics">
+            <option value="Dentistry"><option value="Ophthalmology"><option value="Dermatology">
+            <option value="Physiotherapy"><option value="Psychiatry"><option value="Emergency Medicine">
+          </datalist>
+          <span class="err" id="specialty-err"></span>
+        </div>
+        <div class="field">
+          <label for="location">Location</label>
+          <input id="location" name="location" maxlength="150" autocomplete="off">
+          <span class="err" id="location-err"></span>
+        </div>
+        <div class="field-pair">
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel" maxlength="20" inputmode="tel" autocomplete="off">
+            <span class="err" id="phone-err"></span>
+          </div>
+          <div class="field">
+            <label for="consultation_fee">Fee (K)</label>
+            <input id="consultation_fee" name="consultation_fee" type="number" min="0" step="0.01" inputmode="decimal">
+            <span class="err" id="consultation_fee-err"></span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" maxlength="120" autocomplete="off">
+          <span class="err" id="email-err"></span>
+        </div>
+        <div class="field">
+          <label for="opening_hours">Opening hours</label>
+          <input id="opening_hours" name="opening_hours" maxlength="100" placeholder="e.g. Mon-Fri 08:00-17:00" autocomplete="off">
+          <span class="err" id="opening_hours-err"></span>
+        </div>
+        <label class="field-check" for="accepts_walk_ins">
+          <input id="accepts_walk_ins" name="accepts_walk_ins" type="checkbox" checked>
+          Walk-in patients welcome
+        </label>
+
+        <div class="slip-actions">
+          <button type="submit" class="btn btn-primary" id="submit-btn">Add clinic</button>
+          <button type="button" class="btn" id="cancel-btn" hidden>Cancel editing</button>
+        </div>
+      </form>
+
+      <section class="register" aria-labelledby="register-title">
+        <div class="register-bar">
+          <h2 id="register-title">Registered clinics</h2>
+          <label class="search">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+            <span class="sr-only">Search clinics</span>
+            <input id="search" type="search" placeholder="Search by name, doctor, specialty or area" aria-keyshortcuts="/">
+            <kbd aria-hidden="true">/</kbd>
+          </label>
+        </div>
+        <div class="toolbar">
+          <div class="chips" role="group" aria-label="Quick filters">
+            <button type="button" class="chip" data-filter="open" aria-pressed="false"><span class="tick" aria-hidden="true">&#10003;</span>Open now <span class="n"></span></button>
+            <button type="button" class="chip" data-filter="walkin" aria-pressed="false"><span class="tick" aria-hidden="true">&#10003;</span>Walk-ins welcome <span class="n"></span></button>
+            <button type="button" class="chip" data-filter="free" aria-pressed="false"><span class="tick" aria-hidden="true">&#10003;</span>Free visits <span class="n"></span></button>
+          </div>
+          <label class="sort">Sort by
+            <select id="sort">
+              <option value="name">Name, A to Z</option>
+              <option value="fee">Lowest fee first</option>
+              <option value="open">Open now first</option>
+              <option value="recent">Recently updated</option>
+            </select>
+          </label>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div id="register" aria-busy="true">
+          <div class="skeleton" aria-hidden="true"><div></div><div></div><div></div><div></div><div></div></div>
+          <p class="sr-only">Loading clinics</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
