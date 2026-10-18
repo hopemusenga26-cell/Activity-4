@@ -262,7 +262,7 @@ function render() {
   const shown = rows.length === clinics.length
     ? `${rows.length} clinic${rows.length === 1 ? '' : 's'}`
     : `${rows.length} of ${clinics.length} clinics`;
-  register.replaceChildren(el('table', {}, el('caption', { textContent: `${shown} shown. Open and closed times use Kabwe time.` }), thead, tbody));
+  register.replaceChildren(el('table', {}, el('caption', { textContent: shown }), thead, tbody));
   flashId = null;
 }
 
@@ -394,7 +394,7 @@ function resetForm() {
   idInput.value = '';
   walkIns.checked = true;
   formTitle.textContent = 'Add a clinic';
-  formRef.textContent = 'New entry';
+  formRef.textContent = '';
   submitBtn.textContent = 'Add clinic';
   cancelBtn.hidden = true;
   form.classList.remove('is-editing');
